@@ -18,6 +18,13 @@ async def create_user(user: User):
     return user
 
 
+@app.get("/users/{pk}", response_model=UserResponse)
+async def get_user(pk: int = Query(None, description="Get info about current user and info about all connected games")):
+    with open('fixtures/users.json') as file:
+        users_data = json.load(file)
+        return UserResponse(**users_data[pk-1])
+
+
 @app.post("/games", response_model=Game,
           response_model_exclude={"id"}  # удаляет параметры в Response, но не схему Response в доке
           )
@@ -30,16 +37,8 @@ async def create_game(game: Game):
 async def get_games():
     with open('fixtures/games.json') as file:
         games_data = json.load(file)
-        print(games_data)
         all_games = GameList(games=games_data)
     return all_games
-
-
-@app.get("/users/{pk}", response_model=UserResponse)
-async def get_user(pk: int = Query(None, description="Get info about current user and info about all connected games")):
-    with open('fixtures/users.json') as file:
-        users_data = json.load(file)
-        return UserResponse(**users_data[pk-1])
 
 
 @app.post("/connect", response_model=Connection)

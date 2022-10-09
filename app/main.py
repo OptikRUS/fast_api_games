@@ -4,9 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from schemas import User, Game, Connection, UserResponse, GameResponse
-from database_config import async_session, engine, Base
-from models import UserModel, GameModel, game_users
+from .schemas import User, Game, Connection, UserResponse, GameResponse
+from .database_config import async_session, engine, Base
+from .models import UserModel, GameModel, game_users
 
 
 app = FastAPI()

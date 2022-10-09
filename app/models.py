@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Table, ForeignKey
 from sqlalchemy.orm import relationship
 
-from database_config import Base
+from .database_config import Base
 
 
 # Declare Many-to-Many

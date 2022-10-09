@@ -1,18 +1,19 @@
-from fastapi import FastAPI, Query, status, HTTPException
+from fastapi import FastAPI, status, HTTPException
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 
 from schemas import User, Game, Connection, UserResponse, GameResponse
 from database_config import async_session, engine, Base
-from models import UserModel, GameModel
+from models import UserModel, GameModel, game_users
 
 
 app = FastAPI()
 
 
 @app.on_event("startup")
-async def startup():
+async def init_tables():
     # create db tables
     async with engine.begin() as conn:
         # await conn.run_sync(Base.metadata.drop_all)
@@ -20,7 +21,7 @@ async def startup():
 
 
 @app.post("/users",
-          # response_model=UserResponse,  # модель для Response, создает схему Response в доке
+          # response_model=UserResponse модель для Response, создает схему Response в доке и ожидает такой формат
           response_model_exclude_unset=True,  # удаляет пустые параметры в Response
           # response_model_include={"name", "age", "email"}, указание параметров из Response
           status_code=status.HTTP_201_CREATED
@@ -38,15 +39,14 @@ async def create_user(user: User):
 
 
 @app.get("/users/{pk}", response_model=UserResponse)
-async def get_user(user_id: int = Query(None,
-                                        description="Get info about current user and info about all connected games")):
+async def get_user(pk: int):
     async with async_session() as session:
-        query = select(UserModel).filter(UserModel.id == user_id)
+        query = select(UserModel).options(selectinload(UserModel.games)).filter(UserModel.id == pk)
         result = await session.execute(query)
         user_data = result.first()
         if user_data:
             return UserResponse.from_orm(user_data[0])
-        raise HTTPException(status_code=404, detail=f"User with id={user_id} is not found")
+        raise HTTPException(status_code=404, detail=f"User with id={pk} is not found")
 
 
 @app.post("/games",
@@ -66,12 +66,10 @@ async def create_game(game: Game):
             raise HTTPException(status_code=409, detail=detail)
 
 
-@app.get("/games",
-         # response_model=GameList
-         )
+@app.get("/games")
 async def get_games():
     async with async_session() as session:
-        result = await session.execute(select(GameModel))
+        result = await session.execute(select(GameModel).options(selectinload(GameModel.users)))
         all_games = result.scalars().all()
         if all_games:
             return all_games
@@ -80,4 +78,11 @@ async def get_games():
 
 @app.post("/connect", response_model=Connection)
 async def connect_to_game(connection: Connection):
+    async with async_session() as session:
+        try:
+            await session.execute(game_users.insert().values(**connection.dict()))
+            await session.commit()
+        except IntegrityError as e:
+            detail = str(e.orig).split('DETAIL:  ')[-1]
+            raise HTTPException(status_code=409, detail=detail)
     return connection

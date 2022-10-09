@@ -14,6 +14,7 @@ class UserResponse(BaseModel):
     name: str
     age: int = Field(None)
     email: str
+    games: list = Field(None)
 
     class Config:
         orm_mode = True

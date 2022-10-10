@@ -13,3 +13,5 @@
 
 
 Run:  `docker-compose up -d`
+
+Link:  `http://0.0.0.0:8000/`

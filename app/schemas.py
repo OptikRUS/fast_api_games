@@ -19,6 +19,14 @@ class UserResponse(BaseModel):
     class Config:
         orm_mode = True
 
+        schema_extra = {
+            "example": {
+                "name": "username",
+                "age": "18",
+                "email": 'username@gmail.com',
+            }
+        }
+
 
 class Game(BaseModel):
     id: int = Field(None)

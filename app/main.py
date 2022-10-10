@@ -21,7 +21,7 @@ async def init_tables():
 
 
 @app.post("/users",
-          # response_model=UserResponse модель для Response, создает схему Response в доке и ожидает такой формат
+          response_model=UserResponse,  # модель для Response, создает схему Response в доке и ожидает такой формат
           response_model_exclude_unset=True,  # удаляет пустые параметры в Response
           # response_model_include={"name", "age", "email"}, указание параметров из Response
           status_code=status.HTTP_201_CREATED
